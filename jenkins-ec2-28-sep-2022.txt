@@ -1,0 +1,65 @@
+    ################        JENKINS ON EC2-UBUNTU   COMMANDS         ########################
+
+    ---> sudo apt-get update -y      #updates ubuntu server
+
+    ---> wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -     #adds repository key
+
+    ---> sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'   #add package repository
+    
+    ---> sudo apt update   #update 
+    
+    ---> sudo apt install default-jre       #installs java dependency
+
+    ---> sudo apt install jenkins -y         #install jenkins
+
+    ---> sudo systemctl start jenkins
+    ---> sudo systemctl status jenkins    #starts jenkins service
+
+    ---> sudo ufw allow 8080           #allows jenkins port
+
+    ---> sudo ufw status                # to check status
+
+    ---> sudo ufw allow OpenSSH sudo ufw enable
+    ---> sudo ufw enable                                  #if ubuntu firewall is inactive use this commands 
+
+    ---> sudo cat /var/lib/jenkins/secrets/initialAdminPassword     #for jenkins initialAdminPassword
+
+    ---> enable security group open 8080 in console
+
+
+
+##################       AMAZON EC2-LINUX       ################################3333
+
+Ensure that your software packages are up to date on your instance by uing the following command to perform a quick software update:
+
+---> sudo yum update –y
+
+Add the Jenkins repo using the following command:
+
+---> sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+
+Import a key file from Jenkins-CI to enable installation from the package:
+
+---> sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+---> sudo yum upgrade
+
+Install Java:
+
+---> sudo amazon-linux-extras install java-openjdk11 -y
+
+Install Jenkins:
+
+---> sudo yum install jenkins -y
+
+Enable the Jenkins service to start at boot:
+
+---> sudo systemctl enable jenkins
+
+Start Jenkins as a service:
+
+---> sudo systemctl start jenkins
+
+---> sudo cat /var/lib/jenkins/secrets/initialAdminPassword            #initialAdminPassword
+
+
+
