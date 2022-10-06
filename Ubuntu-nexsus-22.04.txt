@@ -1,0 +1,123 @@
+Prequesites :
+4 cpus max and min used 2 in this video
+20 gb storage
+java 8
+Aws account
+
+==>  sudo apt update                                                                #update packages
+ 
+ Now, install the Java OpenJDK 8 via the apt command below. Input Y when asked to confirm the installation and press ENTER to proceed.
+==>  sudo apt install openjdk-8-jdk                                                   # install java8
+
+Once Java is installed, verify the Java version on your system using the following command.
+==>  java -version
+
+To install Nexus, you will need to create a new dedicated Linux user with a valid shell and 
+also need to set up the max open files for both hard and soft limits to '65536'.
+
+Run the following command to create a new dedicated user for the Nexus with the name 'nexus'
+==>  sudo useradd -d /opt/nexus -s /bin/bash nexus
+==>  sudo passwd nexus
+           Add password
+
+Next, set the ulimit to '65536' using the below command. This will only affect the system on the current system temporarily. 
+To make it permanent, you can create a new config file that you will do in the next step.           
+
+==>  ulimit -n 65536
+
+TO set up ulimit permanently, create a new config file '/etc/security/limits.d/nexus.conf' using nano editor.
+==>  sudo nano /etc/security/limits.d/nexus.conf
+      nexus - nofile 65536
+
+==>  ulimit -a
+
+Download the Nexus Repository Manager package via the wget command as below. If the download process is finished, 
+you will see the file 'nexus-3.41.1-01-unix.tar.gz' on your current working directory.
+
+==>  wget https://download.sonatype.com/nexus/3/nexus-3.41.1-01-unix.tar.gz
+
+Now extract the file 'nexus-3.41.1-01-unix.tar.gz' via the tar command below. And you should get two directories, the 'nexus-3.41.1-01' and 'sonatype-work'.
+
+The directory 'nexus-3.41.1-01' is the main directory for the Nexus package, and the directory 'sonatype-work' is the main working directory for Nexus.
+
+==>  tar xzf nexus-3.41.1-01-unix.tar.gz
+
+Next, move those extracted directories to '/opt' using the following command. 
+The Nexus package directory will be '/opt/nexus' and the Nexus working directory will be '/opt/sonatype-work'.
+
+==>  sudo mv nexus-3.41.1-01 /opt/nexus
+==>  sudo mv sonatype-work /opt/
+
+Lastly, change the ownership of both directories to the user and group 'nexus' via the chown command below.
+
+==>  sudo chown -R nexus:nexus /opt/nexus /opt/sonatype-work
+
+Next, you will set up your Nexus installation by editing some of the Nexus configuration files.
+
+Open the file '/opt/nexus/bin/nexus.rc' using nano editor.
+
+==>  sudo nano /opt/nexus/bin/nexus.rc
+
+Uncomment the option 'run_as_user' and change the value to 'nexus'. With this configuration, you will be running the Nexus application as the system user 'nexus'.
+
+==>  run_as_user='nexus'
+
+Save the file and exit the editor when you are done.
+
+Next, open the config file '/etc/nexus/bin/nexus.vmoptions' using the nano editor to set up the max heap memory for Nexus.
+***********************************************************************************************
+==>  sudo vi /opt/nexus/bin/nexus.vmoptions
+
+-Xms1024m
+-Xmx1024m
+-XX:MaxDirectMemorySize=1024m
+
+-XX:LogFile=./sonatype-work/nexus3/log/jvm.log
+-XX:-OmitStackTraceInFastThrow
+-Djava.net.preferIPv4Stack=true
+-Dkaraf.home=.
+-Dkaraf.base=.
+-Dkaraf.etc=etc/karaf
+-Djava.util.logging.config.file=/etc/karaf/java.util.logging.properties
+-Dkaraf.data=./sonatype-work/nexus3
+-Dkaraf.log=./sonatype-work/nexus3/log
+-Djava.io.tmpdir=./sonatype-work/nexus3/tmp
+************************************************************************************************
+
+To run nexus as service using Systemd
+
+==>  sudo nano /etc/systemd/system/nexus.service
+************************************************************************************************
+[Unit]
+Description=nexus service
+After=network.target
+
+[Service]
+Type=forking
+LimitNOFILE=65536
+ExecStart=/opt/nexus/bin/nexus start
+ExecStop=/opt/nexus/bin/nexus stop
+User=nexus
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+***********************************************************************************************
+
+==>  sudo systemctl daemon-reload
+==>  sudo systemctl start nexus.service
+==>  sudo systemctl enable nexus.service
+==>  sudo systemctl status nexus.service
+
+if the nexus service is not started, you can the nexus logs using below command
+
+==>  tail -f /opt/sonatype-work/nexus3/log/nexus.log
+
+in ec2 instance add 8081 port for Nexus
+
+sudo cat /opt/nexus/sonatype-work/nexus3/admin.password
+
+
+###########################################################################################################################################################
+
+   
