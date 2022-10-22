@@ -1,0 +1,299 @@
+1. install and running jenkins server and install docker 
+==============================================================
+sudo apt update
+sudo apt install default-jdk -y
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dearmor -o /usr/share/keyrings/jenkins.gpg
+sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl start jenkins.service
+sudo systemctl status jenkins
+sudo ufw allow 8080
+sudo ufw allow OpenSSH
+sudo ufw enable
+sudo ufw status
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+sudo apt install docker.io -y
+sudo snap install docker
+
+Docker pipeline and Kubernetes CLI plug-ins are installed in Jenkins
+Add Maven plugin in Global Tool Configuration
+
+sudo usermod -aG docker jenkins
+sudo service jenkins restart
+sudo service docker restart
+=================================================================
+2. Install awscli, eksctl, kubectl on the jenkins server
+
+
+awscli => 
+=========
+   sudo apt install awscli
+   aws configure  => give the security credentials
+eksctl
+=======
+	curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+	sudo mv /tmp/eksctl /usr/local/bin
+	eksctl version
+kubectl
+=======
+	sudo curl --silent --location -o /usr/local/bin/kubectl   https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
+	sudo chmod +x /usr/local/bin/kubectl
+	kubectl version --short --client
+=============================================================
+
+3.Create IAM Role with Administrator Access
+
+	create a role with adminstrative access policy and then attach to jenkins server
+
+==============================================================================================
+4.Switch to Jenkins user and Create a cluster using eksctl
+
+	sudo su - jenkins => we are going to jenkins folder
+	eksctl create cluster --name nag-eks --region ap-south-1 
+	--nodegroup-name my-nodes --node-type t3.small --managed --nodes 2  => create the cluster in jenkins user only
+	
+	aws eks update-kubeconfig --name Aj-eks --region ap-south-1 => update the kubeconfig with correct name of cluster and region
+
+	cat  /var/lib/jenkins/.kube/config  => save this content of file for further usage.
+
+	Create Credentials for connecting to Kubernetes Cluster using kubeconfig => manage Jenkins->Manage Credentials
+	->System->global credentials->add credentails->create new credentials with kind is secret file
+	-> add file the kubeconfig file before you saved
+
+
+
+==>  Jenkins up and running
+
+==>  Nexus up and running 
+   --->   copy public-ip:8081   #for later use      http://3.111.30.182:8081/
+
+==>  Sonarqube up And running
+   --->  copy public-ip:9000    #for later use       http://13.233.149.23:9000/
+
+==>  Manage jenkins
+   ==>  configure system 
+     ---> sonarqube servers
+        ---> in server url   paste public ip of sonarqube with 9000   # http://35.154.117.52:9000/
+        
+        ==> search for Nexus in configure system
+          --->  sonatype nexus 
+             ---> in server url  paste public ip of nexus repo with 8081    # http://52.66.105.63:8081/
+
+===>   Apply and save 
+
+===>   In sonarqube Dashboard 
+         --->  Administration 
+            --->  configuration 
+               --->  webhooks 
+                  --->  create  
+                     ---> give name 
+                        --->  Add jenkins url:8080/sonarqube-webhook            #http://65.0.85.245:8080/sonarqube-webhook
+                           ---> create                 # for Qualitygate
+
+===>    In sonarqube dashboard 
+   --->  Quality gates
+      --->  create --> Name and save 
+         ---> Add conditions 
+             ---> Bugs less than 2
+                  and coverage  lessthan 80
+                  --->  Make it default 
+
+===>    In sonarqube Dashboard 
+   --->  projects
+      --->  create project (Manually)
+         --->  give Project display name and set 
+            ---> give a name and generate token and save it in notepad for later purpose 
+               --->  locally
+                  --->  Run analysis select maven 
+                     ---> and copy code that generated in run analysis for maven
+
+===>   In nexus dashboard create repo and user 
+    Create user in nexus 
+
+   ==> To create a new user, go to Dashboard 
+                      >> Server Administrator and  
+                      Configuration 
+                         >> User 
+                             >> Create user.
+
+                                In the Create User page,
+
+                     ID: Enter the desired ID; in our case, it is Aj (enter ur ID).
+                     First Name: Enter the desired first name; in our case, it is Ajay (enter ur name).
+                     Last Name: Enter the desired second name; in our case, it is User.
+                     Email: Enter your email address.
+                     Status: Select Active from your drop-down menu.
+                     Roles: Make sure that you grant the nx-admin role to your user. 
+   ===>   create user
+
+Create a Repository in Nexus:
+In this step, you are going to create a Maven Hosted repository in Nexus, where your Jenkins is going to upload “build” artifacts.
+
+Step 1:
+Follow the below-mentioned steps to create a hosted repository, name it as (Aj-repo)(user ur name but remember it ), which you are going to use throughout this guide.
+
+on Repositories select create repository
+  ==> Select maven2 (hosted) recipe from the list 
+  ==> Step 2:
+         On the Create Repository page,
+
+        Enter the name as Aj-repo(ur name )
+        In Version Policy, select the Mixed type of artifacts.
+        Under the Hosted section, in Deployment policy, select Allow redeploy. It will allow you to deploy an application multiple times.
+==> create
+
+Install and Configure Nexus Plugins in Jenkins
+Here you are going to install and configure a few plugins for Nexus in Jenkins. For this, go to Jenkins and then 
+ ===>Dashboard 
+          >> Manage Jenkins 
+                  >> Manage Plugins 
+                       >> Available and search and install 
+                             1) Nexus Artifact Uploader,
+                             2) Pipeline-Utility-Steps,
+                             3) pipeline maven integration.
+
+==> Restart ur jenkins 
+
+===>   In jenkins dashboard 
+   ---> install plugins 
+       ---> Docker
+          --->  Docker pipeline
+             --->  kubernetes cli 
+
+===>  Restart jenkins 
+
+===>   Jenkins Dashboard
+      --->  Manage jenkins
+         ---> under security Managae credentials for sonarqube
+            ---> system
+               ----> global credentials
+                  ----> Add credential
+                      ----> kind --->   SECRET TEXT (select)
+                        ---> paste the token that generated in secret 
+                           -----> id
+                              ---->  Description
+                              ==> create
+
+===>  Add Nexus Repository Manager’s user credentials in Jenkins. Go to Dashboard 
+           >>manage Credentials 
+                 >> System 
+                   >> Global credentials (unrestricted),
+                   add ur credentials 
+                   and Remember ur Nexus creds ID   
+
+
+
+pipeline {
+    agent any 
+    tools{
+        maven "maven3"                                //give ur maven name from GTC
+    }
+    environment {
+        // This can be nexus3 or nexus2 server
+        NEXUS_VERSION = "nexus3"
+        // This can be http or https
+        NEXUS_PROTOCOL = "http"
+        // Where your Nexus is running
+        NEXUS_URL = "3.111.30.182:8081"                               #give ur nexus public ip
+        // Repository where we will upload the artifact
+        NEXUS_REPOSITORY= "Aj-repo"                                    # give ur nexus repo name
+        // Jenkins credential id to authenticate to Nexus OSS
+        NEXUS_CREDENTIAL_ID = "nexus-id"                             #jenkins nexus creds id 
+    }
+    stages {
+        stage('Git checkout') {
+            steps {
+               checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Git-creds', url: 'https://github.com/Aj7Ay/amazon-eks-jenkins-terraform-aj7.git']]])
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        } 
+        stage('build && SonarQube analysis') {
+            steps {
+                withSonarQubeEnv('Aj') {                                                                                                 #ur sonarqube env name 
+                // If you have configured more than one global server connection, you can specify its name
+                //      sh "${scannerHome}/bin/sonar-scanner"
+                   sh "mvn clean verify sonar:sonar -Dsonar.projectKey=Youtube -Dsonar.host.url=http://13.233.149.23:9000 -Dsonar.login=squ_a79230438858d9e22bde3a7244757facb1636522"                                                                      #change ur run analysis code 
+                }
+            }
+        }
+        stage('Quality_Gate') {
+             steps{
+              timeout(time: 2, unit: 'MINUTES') {
+               waitForQualityGate abortPipeline: true
+              }
+
+             }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                  sh 'docker build -t sevenajay/petclinic-1.0 .'                                                             #ur docker username 
+                }
+            }
+        }
+        stage('Deploy Docker Image') {
+            steps {
+                script {
+                 withCredentials([string(credentialsId: 'docker-secret-text', variable: 'Docker')]) {       //give ur docker password as secret text in jenkins creds
+                    sh 'docker login -u sevenajay -p ${Docker}'
+                 }  
+                 sh 'docker push sevenajay/petclinic-1.0'
+                }
+            }
+        }
+        stage ('K8s deploy') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', serverUrl: '') {
+                
+                sh "kubectl apply -f kubernetes/petclinic.yaml"    
+                }
+            }
+        }
+        stage("Publish to Nexus Repository Manager") {
+            steps {
+                script {
+                    pom = readMavenPom file: "pom.xml";
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    artifactPath = filesByGlob[0].path;
+                    artifactExists = fileExists artifactPath;
+                    if(artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+                        nexusArtifactUploader(
+                            nexusVersion: NEXUS_VERSION,
+                            protocol: NEXUS_PROTOCOL,
+                            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            version: pom.version,
+                            repository: NEXUS_REPOSITORY,
+                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging],
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: "pom.xml",
+                                type: "pom"]
+                            ]
+                        );
+                    } else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
+            }
+        }   
+    }
+}
