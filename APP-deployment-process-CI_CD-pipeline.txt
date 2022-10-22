@@ -205,7 +205,7 @@ pipeline {
     stages {
         stage('Git checkout') {
             steps {
-               checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Git-creds', url: 'https://github.com/Aj7Ay/amazon-eks-jenkins-terraform-aj7.git']]])
+               checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'Git-creds', url: 'https://github.com/Aj7Ay/amazon-eks-jenkins-terraform-aj7.git']]])
             }
         }
         stage('Build') {
