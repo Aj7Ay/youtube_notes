@@ -1,0 +1,37 @@
+pipeline{
+        agent any
+        parameters {
+            string (name: "NAME" , description : 'please tell me your name?')
+            text (name: "DESC", description: "Describe about the job details")
+            booleanParam(name:'SKIP_TEST', description: 'want to skip running test cases?')
+            choice(name:'BRANCH', choices:['master', 'dev'], description: 'choose branch')
+            password(name: 'Git_passwd', description: 'Enter password')
+        }
+        tools{
+            maven "maven3"
+        } 
+        stages {
+            stage("Printing params") {
+                steps {
+                    echo "Hello ${params.NAME}"
+                    echo "Job Details: ${params.DESC}"
+                    echo "skip Running Test case ?: ${params.SKIP_TEST}"
+                    echo "Branch Choice: ${params.BRANCH}"
+                    echo "Git_passwd : ${params.Git_passwd}"
+                }
+            }
+            stage ("GIT CHECKOUT") {
+                steps {
+                    echo "GIT CHECKOUT "
+                    git credentialsId: 'Git-creds', url: 'https://github.com/Aj7Ay/sparkjava-war-example.git'
+                }
+            }
+            stage ("BUILD") {
+                steps {
+                      script {
+                        sh "mvn clean install package "
+                      }
+                }
+            }
+        }
+}
