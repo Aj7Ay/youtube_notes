@@ -1,0 +1,40 @@
+---
+- name: Install jenkins
+  hosts: Jenkins-server
+  become: yes
+  become_user: root
+
+  tasks:
+  - name: yum update
+    yum:
+      name: '*'
+      state: latest
+
+  - name: add the jenkins repo    
+    get_url:
+       url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+       dest: /etc/yum.repos.d/jenkins.repo
+
+  - name: import a key file from jenkins-ci
+    ansible.builtin.rpm_key:
+        state: present     
+        key: https://pkg.jenkins.io/redhat/jenkins.io.key
+
+  - name: yum update
+    yum:
+      name: '*'
+      state: latest
+
+  - name: install java
+    shell: amazon-linux-extras install java-openjdk11 -y
+
+  - name: Install jenkins
+    yum: 
+      name: jenkins
+      state: latest
+
+  - name: Start jenkins
+    ansible.builtin.systemd:
+        enabled: yes
+        name: jenkins
+        state: started                 
