@@ -23,6 +23,6 @@ USE mysql_test;
 
 CREATE TABLE table1 (id INT, name VARCHAR(45));
 
-INSERT INTO table1 VALUES(1, 'Virat'), (2, 'Sachin'), (3, 'Dhoni'), (4, 'ABD');
+INSERT INTO table1 VALUES(1, 'Virat'), (2, 'Sachin'), (3, 'Dhoni'), (4, 'ABD'), (5,'Ajay');
 
 SELECT * FROM table1;
