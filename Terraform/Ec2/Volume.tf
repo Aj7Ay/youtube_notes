@@ -97,3 +97,53 @@ resource "aws_key_pair" "deployer" {
 output "public_ip" {
   value = aws_instance.ec2_example.public_ip
 }
+
+
+Here's an example of how you could mount an EBS volume to an EC2 instance using a Terraform script: using Remote exec : 
+
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+
+  root_block_device {
+    volume_size = "8"
+    volume_type = "gp2"
+  }
+}
+
+resource "aws_ebs_volume" "example" {
+  availability_zone = "us-west-2a"
+  size              = "8"
+  type              = "gp2"
+
+  tags = {
+    Name = "example-volume"
+  }
+}
+
+resource "aws_volume_attachment" "example" {
+  device_name = "/dev/sdf"
+  volume_id   = aws_ebs_volume.example.id
+  instance_id = aws_instance.example.id
+}
+
+resource "null_resource" "example" {
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkfs -t ext4 /dev/xvdf",
+      "sudo mount /dev/xvdf /mnt",
+      "sudo echo '/dev/xvdf /mnt ext4 defaults 0 0' | sudo tee -a /etc/fstab"
+    ]
+
+    connection {
+      type     = "ssh"
+      host     = aws_instance.example.public_ip
+      user     = "ubuntu"
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+}
