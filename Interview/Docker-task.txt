@@ -1,0 +1,117 @@
+How I Crushed My Interview Task with Oracle VM, Linux and Docker for a Web App
+
+
+1.Install Oracle VM VirtualBox on your Windows machine by downloading and running the installation file from the official website.
+
+2.Create a new Linux virtual machine (VM) within VirtualBox by selecting "New" from the VirtualBox Manager window, giving it a name and selecting "Linux" as the type and "Ubuntu" as the version. Allocate enough resources (RAM, CPU, storage) to the VM to ensure that it can run smoothly.
+
+3.Install the Ubuntu Linux operating system on the newly created VM by downloading the ISO file from the official Ubuntu website and selecting it as the boot disk for the VM. Follow the installation prompts to complete the installation.
+
+4.Install Docker on the Linux VM by following the official installation guide for Ubuntu. This will involve adding the Docker repository to your package manager, updating it and installing the Docker engine.
+
+5.Create a Dockerfile for your web application by creating a new file in your project directory with the name "Dockerfile" (no extension). 
+
+6.Create three Docker containers from the image you just built by running the "docker run" command with different container names for each instance. Make sure to map the application port to a different port on the host machine for each container to avoid port conflicts.
+
+7.Test that your web application is accessible from each container by opening a web browser within each container and navigating to the appropriate URL.
+
+8.Use the Docker networking feature to connect it to the three containers running the web application. This will allow you to access all three containers from a single container by referencing their IP addresses or hostnames.
+
+9.Access your web application from your Windows laptop, you need to forward the port from your VirtualBox VM to your host machine. To do this, go to the settings for your Linux VM in VirtualBox, select "Network", and then select "Port Forwarding". Add a new rule that maps the container port of your web application to a port on your Windows host machine.
+
+10.Once you have forwarded the port, you should be able to access your web application from your Windows laptop by opening a web browser and navigating to the IP address of your Linux VM and the port you forwarded.
+
+11.To access your web application from another machine on your network, you need to ensure that your Linux VM is accessible from that machine. This will involve configuring your network settings for the Linux VM to use a bridged adapter or NAT network in VirtualBox. Consult the VirtualBox documentation for instructions on how to do this.
+
+Once your Linux VM is accessible from another machine, you can access your web application by navigating to the IP address of your Linux VM and the port you forwarded.
+
+12.To use a DNS name instead of a port to access your web application, you need to set up a DNS server on your network and configure it to resolve the DNS name you want to use to the IP address of your Linux VM. You can use a free DNS service like No-IP or DynDNS to set up a dynamic DNS name that will automatically update when your IP address changes.
+
+Once you have set up the DNS name, you can access your web application by navigating to the DNS name instead of the IP address and port.
+
+
+
+# Base image
+FROM nginx:latest
+
+# Copy application files to container
+COPY index.html /usr/share/nginx/html
+
+# Expose port 80 for HTTP
+EXPOSE 80
+
+# Start Nginx and serve the HTML file
+CMD ["nginx", "-g", "daemon off;"]
+
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>youtube Allow Fullscreen</title>
+</head>
+
+<body>
+
+ <!--Need Internet Connection-->
+ <!--Fullscreen allow-->
+ <iframe width="420" height="315" src="https://www.youtube.com/embed/VGOa_h8dFM4" allowfullscreen></iframe>
+
+</body>
+
+</html>
+
+
+
+
+#!/bin/bash
+
+# Build the Docker image
+docker build -t my-html-app .
+
+# Run three containers
+docker run -d --name container1 -p 8081:80 my-html-app
+docker run -d --name container2 -p 8082:80 my-html-app
+docker run -d --name container3 -p 8083:80 my-html-app
+
+
+#to give user root permissions
+sudo groupadd docker
+sudo usermod -aG $user
+newgrp docker
+
+
+#To enter into container
+docker exec -it <container id> bash
+
+
+#To create docker network
+docker network create $name
+docker network connect $name $container name
+
+#To see docker networks
+docker network ls
+#To inspect 
+docker network inspect $network id
+
+#to see container id
+docker inspect <container id> | grep "IPAddress"
+
+
+#to stop containers
+docker stop <container id>
+or
+docker stop container name
+
+
+#to delete stopped containers and network at once
+docker system prune 
+y
+
+
+Thanks 
+Ajay kumar Yegireddi
+
+ 
