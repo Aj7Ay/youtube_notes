@@ -1,0 +1,167 @@
+===> postfix setup amazon linux
+===> Edit configuration for Google smtp
+===> How  to send mail
+===> How to attach a file in email
+
+
+firstly launch an ec2 instance 
+
+----> sudo yum update -yum
+----> sudo yum install postfix -y
+----> sudo yum install mailx -y 
+
+This will install postfix and mailx on the instance 
+
+you can check using below commands 
+
+--->  rpm -qa | grep mailx
+--->  rpm -qa | grep postfix 
+
+
+lets change postfix configuration in the file #main.cf 
+
+/etc/postfix/main.cf
+
+---->  cd /etc/postfix    # this will change directory from home to /etc/postfix
+
+you can check the file using 
+
+---->  ls -lrt command
+
+make an duplicate of configuration file incase of error 
+
+--->  cp main.cf main.cf_bkp #it will create an duplicate file 
+
+lets open the file 
+
+--->   vi main.cf
+
+---->   use this to search /relayhost 
+
+under 
+#relayhost = uucphost
+#relayhost = [an.ip.add.ress]
+add this liness   ----->>> underthose
+
+relayhost = [smtp.gmail.com]:587 
+
+esc and save the file 
+
+sudo hostname new_hostname
+
+sudo reboot
+
+ssh again into terminal after one minute
+
+--->  hostname -f
+in case it still ip address 
+
+then chnage directly by going to the file
+
+--->  sudo vi /etc/hostname 
+and edit your name #in my case Ajay
+
+ ---> sudo reboot
+
+and again see ----> hostname -f
+
+if you see ur name then again go to postfix configuration file
+
+---> sudo reboot 
+
+---> cd /etc/postfix
+
+----> vi main.cf 
+
+search using /myhostname 
+
+under #Wmyhostname = virtual.domain.tld
+
+add this line 
+
+--> myhostname = ur name gave at /etc/hostname
+
+and at the end of the file add these lines 
+
+
+###############################################
+# Location of sasl_passwd we saved
+smtp_sasl_password_maps = hash:/etc/postfix/sasl/sasl_passwd
+
+# Enables SASL authentication for postfix
+smtp_sasl_auth_enable = yes
+smtp_tls_security_level = encrypt
+
+# Disallow methods that allow anonymous authentication
+smtp_sasl_security_options = noanonymous
+
+
+save and exit main.cf file 
+
+
+then ---> mkdir sasl at # /etc/postfix folder 
+
+cd /etc/postfix/sasl 
+
+touch sasl_passwd  it creates an empty file 
+
+Then go to your email in browser
+
+click on your profile 
+then --> click on manage your google account 
+security in left side panel clcik it 
+
+make sure enabled two step verfication 
+
+and search option  inside search for app
+
+App passwords select
+prompts for email password enter and go inside
+
+selct app (other custom name )
+add name and generate password 
+you will get password in yellow color background copy it and come back to terminal
+
+cd /etc/postfix/sasl
+
+---> vi sasl_passwd 
+
+enter this
+
+[smtp.gmail.com]:587 urmail:password that ur copied before 
+
+save and exit from it 
+
+
+and change the sasl_passwd file into db file by using this command
+
+postmap /etc/postfix/sasl/sasl_passwd  enter here
+
+you will generate sasl_passwd.db file 
+
+ls -lrt
+
+change permission 
+chmod 600 *
+
+ls -lrt see rw for only root
+
+systemctl start postfix.service 
+systemctl enable postfix.service 
+systemctl status postfix.service 
+
+active then 
+
+send mail 
+
+--->  echo "Test mail" | mail -s "Ajay Test" urmail and enter 
+
+you will get mail  
+
+and if you want send file also 
+
+vi testfile
+ enter any text u want save and exit 
+
+
+echo "Test mail" | mail -s "Ajay Test" -a testfile  urmail and enter 
