@@ -1,0 +1,39 @@
+Create a new server block configuration file for Nginx:
+
+
+sudo nano /etc/nginx/sites-available/jenkins
+Inside the text editor, paste the following configuration:
+
+
+server {
+    listen 80;
+    server_name ur Dns name;
+
+    location / {
+        proxy_pass http://localhost:8080/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+Save and close the file (in nano, press Ctrl+O, then Enter, and Ctrl+X to exit).
+
+Enable the server block by creating a symbolic link in the sites-enabled directory:
+
+
+sudo ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
+Verify the Nginx configuration:
+
+Copy code
+sudo nginx -t
+If the configuration test is successful, restart Nginx for the changes to take effect:
+
+Copy code
+sudo systemctl restart nginx
+Update the DNS settings for your domain (mrcloudbook.online) in your Hostinger account to point to the IP address of your server.
+
+Wait for the DNS changes to propagate (typically a few minutes to a few hours, depending on various factors).
+
+Access your Jenkins server using the URL http://ur dns name.
+
+That's it! You have successfully set up an Nginx reverse proxy for your Jenkins server using your Hostinger DNS name. Now you can access Jenkins securely through your domain.
