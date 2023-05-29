@@ -1,3 +1,4 @@
+sudo vi /etc/nginx/sites-available/mrcloudbook.online
 Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
 Paste the below (replace your domain)
 
