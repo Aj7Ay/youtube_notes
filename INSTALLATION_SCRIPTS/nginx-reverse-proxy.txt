@@ -1,39 +1,45 @@
-Create a new server block configuration file for Nginx:
+Paste in the following configuration block, which is similar to the default, but updated for our new directory and domain name:
+Paste the below (replace your domain)
 
+upstream jenkins{
+    server 127.0.0.1:8080;
+}
 
-sudo nano /etc/nginx/sites-available/jenkins
-Inside the text editor, paste the following configuration:
+server{
+    listen      80;
+    server_name ur dns name;
 
+    access_log  /var/log/nginx/jenkins.access.log;
+    error_log   /var/log/nginx/jenkins.error.log;
 
-server {
-    listen 80;
-    server_name ur Dns name;
+    proxy_buffers 16 64k;
+    proxy_buffer_size 128k;
 
     location / {
-        proxy_pass http://localhost:8080/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass  http://jenkins;
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+        proxy_redirect off;
+
+        proxy_set_header    Host            $host;
+        proxy_set_header    X-Real-IP       $remote_addr;
+        proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header    X-Forwarded-Proto https;
     }
+
 }
-Save and close the file (in nano, press Ctrl+O, then Enter, and Ctrl+X to exit).
+Next, let’s enable the file by creating a link from it to the sites-enabled directory, which Nginx reads from during startup:
+Run from shell prompt (replace your domain)
 
-Enable the server block by creating a symbolic link in the sites-enabled directory:
+sudo ln -s /etc/nginx/sites-available/mrcloudbook.online /etc/nginx/sites-enabled/
+Next, test to make sure that there are no syntax errors in any of your Nginx files:
+Run from shell prompt
 
-
-sudo ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
-Verify the Nginx configuration:
-
-Copy code
 sudo nginx -t
-If the configuration test is successful, restart Nginx for the changes to take effect:
+If there aren’t any problems, restart Nginx to enable your changes:
+Run from shell prompt
 
-Copy code
 sudo systemctl restart nginx
-Update the DNS settings for your domain (mrcloudbook.online) in your Hostinger account to point to the IP address of your server.
+Nginx should now be serving Jenkins from your domain name. You can test this by navigating to http://your_domain
 
-Wait for the DNS changes to propagate (typically a few minutes to a few hours, depending on various factors).
 
-Access your Jenkins server using the URL http://ur dns name.
-
-That's it! You have successfully set up an Nginx reverse proxy for your Jenkins server using your Hostinger DNS name. Now you can access Jenkins securely through your domain.
+sudo certbot --nginx -d mrcloudbook.online
