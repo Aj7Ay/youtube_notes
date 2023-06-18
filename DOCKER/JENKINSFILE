@@ -1,0 +1,94 @@
+pipeline {
+    agent {
+        label "Agent1"
+    }
+    tools {
+        jdk "java17"
+        maven "M3"
+    }
+    environment {
+        APP_NAME = "complete-production-e2e-ajay"
+        RELEASE = "1.0.0"
+        DOCKER_USER = "sevenajay"
+        DOCKER_PASS = "dockerhub"
+        IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
+        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
+    }
+    stages {
+        stage("clean workspace"){
+            steps {
+                cleanWs()
+            }
+        }
+         stage("checkout scm"){
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Aj7Ay/complete-prodcution-e2e-pipeline.git']])
+            }
+        }
+         stage("build stage"){
+            steps {
+                sh "mvn clean package"
+            }
+        }
+         stage("test code"){
+            steps {
+                sh "mvn test"
+            }
+        }
+         stage("sonar checks"){
+            steps {
+                script {
+                withSonarQubeEnv(credentialsId: 'sonar') {
+                     sh "mvn sonar:sonar"
+                }    
+            }
+        }
+        }
+        stage("quality gate"){
+            steps {
+                script {
+                waitForQualityGate abortPipeline: false, credentialsId: 'sonar' 
+            }
+        }
+        }
+        stage ("docker build") {
+            steps {
+                script {
+                    docker.withRegistry('',DOCKER_PASS) {
+                        // Remove old images from docker repository
+                        sh "docker images --format '{{.Repository}}:{{.Tag}}' | grep ${IMAGE_NAME} | grep -v ${RELEASE}-${BUILD_NUMBER} | grep -v latest | xargs -I {} docker rmi {} || true"
+                        docker_image = docker.build "${IMAGE_NAME}"
+                    }
+                }
+            }
+        }
+        stage ("Trivy image scan") {
+            steps {
+                script {
+                    sh "trivy image ${docker_image.id} > trivy.txt"
+                }
+            }
+        }
+        stage ("PUSH docker image") {
+            steps {
+                script {
+                    docker.withRegistry('',DOCKER_PASS) {
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push('latest')
+                    }
+                }
+            }
+        }
+    }
+    post {
+    always {
+        emailext attachLog: true,
+            subject: "'${currentBuild.result}'",
+            body: "Project: ${env.JOB_NAME}<br/>" +
+                "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                "URL: ${env.BUILD_URL}<br/>",
+            to: 'postbox.aj99@gmail.com',
+            attachmentsPattern: 'trivy.txt'
+        }
+    }
+}
