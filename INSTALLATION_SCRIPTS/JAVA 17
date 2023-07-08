@@ -1,0 +1,93 @@
+Update the package list:
+
+sudo apt update 
+
+Install the OpenJDK 17 package:
+
+sudo apt install openjdk-17-jdk 
+
+Verify the installation by checking the Java version:
+
+java -version 
+
+This command should display the installed Java version.
+
+To remove Java 17 and its associated commands, you can use the following steps:
+Uninstall the OpenJDK 17 package:
+
+sudo apt remove openjdk-17-jdk 
+
+Remove any residual configuration files:
+
+sudo apt purge openjdk-17-jdk 
+
+Additionally, if you no longer need the Java package repository, you can remove it as well:
+
+sudo apt-add-repository --remove ppa:openjdk-r/ppa 
+
+That's it! Java 17 should now be uninstalled from your Ubuntu 22.04 system, and you won't have access to the Java 17 commands anymore.
+  
+install java 11 and remove on ubuntu 22.04
+
+To install Java 11 on Ubuntu 22.04, you can follow these steps:
+Update the package list:
+
+sudo apt update 
+
+Install the OpenJDK 11 package:
+
+sudo apt install openjdk-11-jdk 
+
+sudo apt install default-jre
+
+Verify the installation by checking the Java version:
+
+java -version 
+
+This command should display the installed Java version.
+To remove Java 11 and its associated commands, you can use the following steps:
+
+Uninstall the OpenJDK 11 package:
+
+sudo apt remove openjdk-11-jdk 
+
+Remove any residual configuration files:
+
+sudo apt purge openjdk-11-jdk 
+
+Additionally, if you no longer need the Java package repository, you can remove it as well:
+
+sudo apt-add-repository --remove ppa:openjdk-r/ppa 
+
+That's it! Java 11 should now be uninstalled from your Ubuntu 22.04 system, and you won't have access to the Java 11 commands anymore.
+
+
+
+Install using the yum Package Manager on Amazon Linux & centos & Amazon 2023
+Amazon Corretto 17 has a 'headless' variant available. This variant omits runtime dependencies that are typically associated with GUI applications such as X11 and ALSA and is worth considering for server-oriented workloads. The 'headful' variant adds support for X11 and ALSA. There is also a 'devel' package which contains the JDK development tools, as well as a 'jmods' package that contains the Amazon Corretto 17 JMods used to create custom runtime images.
+Option 1: Install the headless Amazon Corretto 17:
+sudo yum install java-17-amazon-corretto-headless
+Option 2: Install the headful Amazon Corretto 17:
+sudo yum install java-17-amazon-corretto
+Option 3: Install the JDK for Amazon Corretto 17:
+sudo yum install java-17-amazon-corretto-devel
+Option 4: Install the JMods for Amazon Corretto 17:
+sudo yum install java-17-amazon-corretto-jmods
+The installation location is /usr/lib/jvm/java-17-amazon-corretto.<cpu_arch>.
+Verify Your Installation
+To verify the installation, run java -version in a console. If the version string doesn't mention Corretto, run the following command to change the default java provider.
+sudo alternatives --config java
+Uninstall Amazon Corretto 17
+You can uninstall Amazon Corretto 17 with the following commands.
+Uninstall headless:
+sudo yum remove java-17-amazon-corretto-headless
+Uninstall headful:
+sudo yum remove java-17-amazon-corretto
+Uninstall devel:
+sudo yum remove java-17-amazon-corretto-devel
+Uninstall jmods:
+sudo yum remove java-17-amazon-corretto-jmods
+
+sudo yum install java-11-amazon-corretto (Amazon 2023)
+
+sudo amazon-linux-extras install java-openjdk11 –y (Amazon linu x2)
