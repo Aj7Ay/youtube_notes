@@ -2,7 +2,9 @@
 --> change to opt directory 
 cd /opt
 --> Download tomcat file using wget command
+
 sudo wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+
 sudo wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.80/bin/apache-tomcat-9.0.80.tar.gz (Another link )
 
 --> Unzip tar file 
@@ -13,6 +15,7 @@ vi server.xml
 --> update tomcat users xml file for manager app login.
 cd /opt/apache-tomcat-9.0.65/conf
 sudo vi tomcat-users.xml
+
 # ---add-below-line at the end (2nd-last line)----
 <user username="admin" password="admin1234" roles="admin-gui, manager-gui"/>
 
